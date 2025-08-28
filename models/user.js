@@ -33,14 +33,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       maxlength: 500,
       default: ""
-    },
-    location: {
-      type: String,
-      default: ""
-    },
-    contactInfo: {
-      type: String,
-      default: ""
     }
   },
   {

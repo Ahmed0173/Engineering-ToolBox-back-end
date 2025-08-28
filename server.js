@@ -31,6 +31,7 @@ app.use(logger('dev'));
 
 // PUBLIC ROUTES
 app.use('/auth', authRouter);
+app.use('/posts', postRouter);
 
 // PROTECTED ROUTES
 app.use(verifyToken);
