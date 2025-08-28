@@ -2,25 +2,19 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const postSchema = new mongoose.Schema({
-
-    post_id:{
-        type: Number,
-        required: false,
-        unique: true
-    },
-    user_id:{
-        type: Number,
-        required: false,
-        unique: true
-    },
     content:{
         type: String,
         required: true,
     },
+    author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     likes:{
-        type: Number
-    }
-    ,
+        type: Number,
+        default: 0
+    },
     tags: [{
         type: String,
         required: false,
