@@ -15,6 +15,7 @@ const userRouter = require('./controllers/users');
 const profileRouter = require('./controllers/profile');
 const postRouter = require('./controllers/posts');
 const privateChatRouter = require('./controllers/privateChats');
+
 // Middleware
 const verifyToken = require('./middleware/verify-token');
 
@@ -33,6 +34,7 @@ app.use(logger('dev'));
 // PUBLIC ROUTES
 app.use('/auth', authRouter);
 app.use('/posts', postRouter);
+app.use('/comments', commentRouter);
 
 // PROTECTED ROUTES
 app.use(verifyToken);
