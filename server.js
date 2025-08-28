@@ -14,6 +14,7 @@ const authRouter = require('./controllers/auth');
 const userRouter = require('./controllers/users');
 const profileRouter = require('./controllers/profile');
 const postRouter = require('./controllers/posts');
+const commentRouter = require('./controllers/comment');
 const privateChatRouter = require('./controllers/privateChats');
 
 // Middleware
