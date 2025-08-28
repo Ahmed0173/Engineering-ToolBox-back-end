@@ -12,9 +12,9 @@ const logger = require('morgan');
 // Controllers
 const authRouter = require('./controllers/auth');
 const userRouter = require('./controllers/users');
-const profileRouter = require('./controllers/profile')
-const postRouter = require('./controllers/posts')
-const commentRouter = require('./controllers/comment')
+const profileRouter = require('./controllers/profile');
+const postRouter = require('./controllers/posts');
+const privateChatRouter = require('./controllers/privateChats');
 
 // Middleware
 const verifyToken = require('./middleware/verify-token');
@@ -40,6 +40,7 @@ app.use('/comments', commentRouter);
 app.use(verifyToken);
 app.use('/users', userRouter);
 app.use('/profile', profileRouter);
+app.use('/chats', privateChatRouter);
 
 app.listen(3000, () => {
   console.log('The express app is ready!');
