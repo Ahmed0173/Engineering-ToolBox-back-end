@@ -6,7 +6,7 @@ const Post = require('../models/post');
 const Comment = require('../models/comments');
 
 // Add a comment to a post
-router.post('/:postId', verifyToken, async (req, res) => {
+router.post('/:postId/new', verifyToken, async (req, res) => {
 	try {
 		const { content } = req.body;
 		
@@ -66,6 +66,32 @@ router.delete('/:postId/:commentId', verifyToken, async (req, res) => {
 		await Comment.findByIdAndDelete(req.params.commentId);
 		
 		res.json({ message: 'Comment deleted successfully' });
+	} catch (err) {
+		res.status(500).json({ message: err.message });
+	}
+});
+
+// Update a comment
+router.put('/:postId/:commentId', verifyToken, async (req, res) => {
+	try {
+		const { content } = req.body;
+		
+		if (!content || content.trim().length === 0) {
+			return res.status(400).json({ message: 'Comment content is required' });
+		}
+
+		const comment = await Comment.findById(req.params.commentId);
+		if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
+		// Check if user owns the comment
+		if (comment.user_id.toString() !== req.user.id) {
+			return res.status(403).json({ message: 'Not authorized to update this comment' });
+		}
+
+		comment.content = content.trim();
+		await comment.save();
+		
+		res.json({ message: 'Comment updated successfully' });
 	} catch (err) {
 		res.status(500).json({ message: err.message });
 	}
