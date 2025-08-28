@@ -13,6 +13,7 @@ const logger = require('morgan');
 const authRouter = require('./controllers/auth');
 const userRouter = require('./controllers/users');
 const profileRouter = require('./controllers/profile')
+const postRouter = require('./controllers/posts')
 // Middleware
 const verifyToken = require('./middleware/verify-token');
 
