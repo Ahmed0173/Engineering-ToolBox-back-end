@@ -10,12 +10,25 @@ const saltRounds = 12;
 
 router.post('/sign-up', async (req, res) => {
   try {
-    const { username, password ,email} = req.body;
+    const { username, password, email } = req.body;
 
-    const existingUser = await User.findOne({ username ,email});
+    // Input validation
+    if (!username || !password || !email) {
+      return res.status(400).json({ err: 'Username, password, and email are required' });
+    }
+
+    // Email format validation
+    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ err: 'Please provide a valid email address' });
+    }
+
+    const existingUser = await User.findOne({ 
+      $or: [{ username }, { email }]
+    });
 
     if (existingUser) {
-      return res.status(409).json({ err: 'Username or Password is invalid' });
+      return res.status(409).json({ err: 'Username or email already exists' });
     }
 
     const hashedPassword = bcrypt.hashSync(password, saltRounds);
@@ -30,7 +43,8 @@ router.post('/sign-up', async (req, res) => {
 
     res.status(201).json({ token });
   } catch (err) {
-    res.status(400).json({ err: 'Invalid, Please try again.' });
+    console.error('Sign-up error:', err); // Add logging to see the actual error
+    res.status(400).json({ err: err.message || 'Invalid, Please try again.' });
   }
 });
 
