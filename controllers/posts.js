@@ -1,16 +1,15 @@
 const express = require('express');
 const verifyToken = require('../middleware/verify-token')
-const post = require('../models/post');
+const Post = require('../models/post');
 const router = express.Router();
 
 
-
-router.post('/', verifyToken, async (req, res) => {
+router.post('/new', verifyToken, async (req, res) => {
     try {
         req.body.author = req.user._id
-        const post = await post.create(req.body)
-        post._doc.author = req.user
-        res.status(201).json(post)
+        const newPost = await Post.create(req.body)
+        newPost._doc.author = req.user
+        res.status(201).json(newPost)
     } catch (err) {
         res.status(500).json({ err: err.message })
     }
