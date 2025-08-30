@@ -39,3 +39,30 @@ router.post('/new', verifyToken, async (req, res) => {
     }
 });
 
+// UPDATE a post
+router.put('/:id/update', verifyToken, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ err: 'Post not found' });
+        }
+        
+        // Check if the user is the author of the post
+        if (post.author.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ err: 'You can only update your own posts' });
+        }
+
+        const updatedPost = await Post.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        ).populate('author', 'username');
+        
+        res.status(200).json(updatedPost);
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
+});
+
+
+module.exports = router
