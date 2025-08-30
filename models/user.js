@@ -16,10 +16,10 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       validate: {
-    validator: function(v) {
-      return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v);
-    }
-  },
+        validator: function (v) {
+          return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(v);
+        }
+      },
       required: true,
       unique: true,
       trim: true,
@@ -27,25 +27,25 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: "assets/default.jpg"
+      default: 'assets/default.jpg'
     },
     bio: {
       type: String,
       maxlength: 500,
-      default: ""
-    }
+      default: ''
+    },
+
+    // NEW: posts this user saved
+    savedPosts: [{ type: Schema.Types.ObjectId, ref: 'Post', index: true }]
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 userSchema.set('toJSON', {
-  transform: (document, returnedObject) => {
-    delete returnedObject.hashedPassword;
+  transform: (_doc, ret) => {
+    delete ret.hashedPassword;   // hide password hash
+    return ret;
   },
 });
 
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);
