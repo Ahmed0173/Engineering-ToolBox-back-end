@@ -19,7 +19,7 @@ router.post('/:postId/new', verifyToken, async (req, res) => {
 
 		const newComment = new Comment({
 			content: content.trim(),
-			user_id: req.user.id,
+			user_id: req.user.id || req.user._id,
 			post_id: req.params.postId
 		});
 		
@@ -60,7 +60,7 @@ router.delete('/:postId/:commentId', verifyToken, async (req, res) => {
 		}
 
 		// Check if user owns the comment
-		if (comment.user_id.toString() !== req.user.id) {
+		if (comment.user_id.toString() !== (req.user.id || req.user._id)) {
 			return res.status(403).json({ message: 'Not authorized to delete this comment' });
 		}
 
@@ -72,31 +72,38 @@ router.delete('/:postId/:commentId', verifyToken, async (req, res) => {
 	}
 });
 
-// Update a comment - need a fix
-// router.put('/:postId/:commentId/update', verifyToken, async (req, res) => {
-// 	try {
-// 		const { content } = req.body;
+// Update a comment
+router.put('/:postId/:commentId/update', verifyToken, async (req, res) => {
+	try {
+		const { content } = req.body;
 		
-// 		if (!content || content.trim().length === 0) {
-// 			return res.status(400).json({ message: 'Comment content is required' });
-// 		}
+		if (!content || content.trim().length === 0) {
+			return res.status(400).json({ message: 'Comment content is required' });
+		}
 
-// 		const comment = await Comment.findById(req.params.commentId);
-// 		if (!comment) return res.status(404).json({ message: 'Comment not found' });
+		const comment = await Comment.findById(req.params.commentId);
+		if (!comment) return res.status(404).json({ message: 'Comment not found' });
 
-// 		// Check if user owns the comment
-// 		if (comment.user_id.toString() !== req.user.id) {
-// 			return res.status(403).json({ message: 'Not authorized to update this comment' });
-// 		}
+		// Check if comment belongs to the post
+		if (comment.post_id.toString() !== req.params.postId) {
+			return res.status(400).json({ message: 'Comment does not belong to this post' });
+		}
 
-// 		comment.content = content.trim();
-// 		await comment.save();
+		// Check if user owns the comment
+		if (comment.user_id.toString() !== (req.user.id || req.user._id)) {
+			return res.status(403).json({ message: 'Not authorized to update this comment' });
+		}
+
+		comment.content = content.trim();
+		comment.is_edited = true;
+		comment.edited_at = new Date();
+		await comment.save();
 		
-// 		res.json({ message: 'Comment updated successfully' });
-// 	} catch (err) {
-// 		res.status(500).json({ message: err.message });
-// 	}
-// });
+		res.json({ message: 'Comment updated successfully', comment });
+	} catch (err) {
+		res.status(500).json({ message: err.message });
+	}
+});
 
 // Reply to a comment
 router.post('/:postId/:commentId/reply', verifyToken, async (req, res) => {
@@ -118,7 +125,7 @@ router.post('/:postId/:commentId/reply', verifyToken, async (req, res) => {
 
 		const newReply = new Comment({
 			content: content.trim(),
-			user_id: req.user.id,
+			user_id: req.user.id || req.user._id,
 			post_id: req.params.postId,
 			parent_id: req.params.commentId
 		});
