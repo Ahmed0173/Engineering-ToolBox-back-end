@@ -65,4 +65,24 @@ router.put('/:id/update', verifyToken, async (req, res) => {
 });
 
 
+// DELETE a post
+router.delete('/:id/delete', verifyToken, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ err: 'Post not found' });
+        }
+        
+        // Check if the user is the author of the post
+        if (post.author.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ err: 'You can only delete your own posts' });
+        }
+
+        await Post.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: 'Post deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
+});
+
 module.exports = router
