@@ -85,4 +85,90 @@ router.delete('/:id/delete', verifyToken, async (req, res) => {
     }
 });
 
+// LIKE/UNLIKE a post
+router.post('/:id/like', verifyToken, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ err: 'Post not found' });
+        }
+
+        const userId = req.user._id;
+        const userIndex = post.likes.indexOf(userId);
+
+        if (userIndex === -1) {
+            // User hasn't liked the post yet, so add like
+            post.likes.push(userId);
+        } else {
+            // User has already liked the post, so remove like
+            post.likes.splice(userIndex, 1);
+        }
+
+        await post.save();
+        const updatedPost = await Post.findById(req.params.id).populate('author', 'username');
+        res.status(200).json(updatedPost);
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
+});
+
+// SAVE/UNSAVE a post
+router.post('/:id/save', verifyToken, async (req, res) => {
+    try {
+        const User = require('../models/user');
+        const post = await Post.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ err: 'Post not found' });
+        }
+
+        const user = await User.findById(req.user._id);
+        const postIndex = user.savedPosts.indexOf(req.params.id);
+
+        if (postIndex === -1) {
+            // Post not saved yet, so add it
+            user.savedPosts.push(req.params.id);
+        } else {
+            // Post already saved, so remove it
+            user.savedPosts.splice(postIndex, 1);
+        }
+
+        await user.save();
+        res.status(200).json({ message: postIndex === -1 ? 'Post saved successfully' : 'Post unsaved successfully' });
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
+});
+
+// GET user's liked posts
+router.get('/users/liked-posts', verifyToken, async (req, res) => {
+    try {
+        const likedPosts = await Post.find({ 
+            likes: { $in: [req.user._id] } 
+        }).populate('author', 'username').sort({ createdAt: -1 });
+        
+        res.status(200).json(likedPosts);
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
+});
+
+// GET user's saved posts
+router.get('/users/saved-posts', verifyToken, async (req, res) => {
+    try {
+        const User = require('../models/user');
+        const user = await User.findById(req.user._id).populate({
+            path: 'savedPosts',
+            populate: {
+                path: 'author',
+                select: 'username'
+            },
+            options: { sort: { createdAt: -1 } }
+        });
+        
+        res.status(200).json(user.savedPosts);
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
+});
+
 module.exports = router
