@@ -4,6 +4,30 @@ const Post = require('../models/post');
 const router = express.Router();
 
 
+// GET all posts
+router.get('/', async (req, res) => {
+    try {
+        const posts = await Post.find({}).populate('author', 'username').sort({ createdAt: -1 });
+        res.status(200).json(posts);
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
+});
+
+// GET a specific post by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id).populate('author', 'username');
+        if (!post) {
+            return res.status(404).json({ err: 'Post not found' });
+        }
+        res.status(200).json(post);
+    } catch (err) {
+        res.status(500).json({ err: err.message });
+    }
+});
+
+// CREATE a new post
 router.post('/new', verifyToken, async (req, res) => {
     try {
         req.body.author = req.user._id
@@ -13,8 +37,5 @@ router.post('/new', verifyToken, async (req, res) => {
     } catch (err) {
         res.status(500).json({ err: err.message })
     }
+});
 
-})
-
-
-module.exports = router
