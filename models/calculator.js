@@ -14,4 +14,4 @@ const calculatorSchema = new mongoose.Schema(
   { timestamps: true }
     
 );
-module.exports = calculator;
+module.exports = calculatorSchema;
