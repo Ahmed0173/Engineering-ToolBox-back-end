@@ -38,7 +38,7 @@ app.use('/posts', postRouter);
 app.use('/comments', commentRouter);
 
 // PROTECTED ROUTES
-app.use(verifyToken);
+// PROTECTED ROUTES (verifyToken is applied in controllers where needed)
 app.use('/users', userRouter);
 app.use('/profile', profileRouter);
 app.use('/chats', privateChatRouter);
