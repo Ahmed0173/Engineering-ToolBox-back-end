@@ -26,9 +26,8 @@ const userSchema = new mongoose.Schema(
       lowercase: true
     },
     avatar: {
-      type: String,
-      default: 'assets/default.jpg'
-    },
+      type: String, default: ""
+     },
     bio: {
       type: String,
       maxlength: 500,
