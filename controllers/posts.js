@@ -7,7 +7,39 @@ const router = express.Router();
 // GET all posts
 router.get('/', async (req, res) => {
     try {
-        const posts = await Post.find({}).populate('author', 'username').sort({ createdAt: -1 });
+        const { author, likedBy, savedBy, page = 1, limit = 10 } = req.query;
+        
+        let query = {};
+        
+        // Filter by author if provided
+        if (author) {
+            query.author = author;
+        }
+        
+        // Filter by liked posts if provided
+        if (likedBy) {
+            query.likes = { $in: [likedBy] };
+        }
+        
+        // Filter by saved posts if provided
+        if (savedBy) {
+            // This requires a different approach since savedPosts is on User model
+            const User = require('../models/user');
+            const user = await User.findById(savedBy);
+            if (user && user.savedPosts) {
+                query._id = { $in: user.savedPosts };
+            } else {
+                // If user not found or has no saved posts, return empty array
+                return res.status(200).json([]);
+            }
+        }
+        
+        const posts = await Post.find(query)
+            .populate('author', 'username')
+            .sort({ createdAt: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+            
         res.status(200).json(posts);
     } catch (err) {
         res.status(500).json({ err: err.message });
