@@ -63,7 +63,7 @@ const formulaSchema = new Schema(
 // Indexes for better performance
 formulaSchema.index({ category: 1, isActive: 1 });
 formulaSchema.index({ tags: 1 });
-formulaSchema.index({ name: "text", description: "text" });
+formulaSchema.index({ name: "text", description: "text", formula: "text" });
 
 const Formula = mongoose.model('Formula', formulaSchema);
 module.exports = Formula;
