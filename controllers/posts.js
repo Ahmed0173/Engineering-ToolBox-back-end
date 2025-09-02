@@ -39,8 +39,40 @@ router.get('/', async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
-            
-        res.status(200).json(posts);
+
+        // Add savedBy information to each post
+        if (posts.length > 0) {
+            const User = require('../models/user');
+            // Get all users who have saved any of these posts
+            const postIds = posts.map(post => post._id);
+            const usersWithSavedPosts = await User.find({
+                savedPosts: { $in: postIds }
+            }).select('_id savedPosts');
+
+            // Create a map of postId -> array of userIds who saved it
+            const savedByMap = {};
+            usersWithSavedPosts.forEach(user => {
+                user.savedPosts.forEach(savedPostId => {
+                    if (postIds.some(id => id.toString() === savedPostId.toString())) {
+                        if (!savedByMap[savedPostId.toString()]) {
+                            savedByMap[savedPostId.toString()] = [];
+                        }
+                        savedByMap[savedPostId.toString()].push(user._id);
+                    }
+                });
+            });
+
+            // Add savedBy field to each post
+            const postsWithSavedBy = posts.map(post => {
+                const postObj = post.toObject();
+                postObj.savedBy = savedByMap[post._id.toString()] || [];
+                return postObj;
+            });
+
+            res.status(200).json(postsWithSavedBy);
+        } else {
+            res.status(200).json(posts);
+        }
     } catch (err) {
         res.status(500).json({ err: err.message });
     }
@@ -53,7 +85,17 @@ router.get('/:id', async (req, res) => {
         if (!post) {
             return res.status(404).json({ err: 'Post not found' });
         }
-        res.status(200).json(post);
+
+        // Add savedBy information
+        const User = require('../models/user');
+        const usersWhoSavedPost = await User.find({
+            savedPosts: req.params.id
+        }).select('_id');
+
+        const postObj = post.toObject();
+        postObj.savedBy = usersWhoSavedPost.map(user => user._id);
+
+        res.status(200).json(postObj);
     } catch (err) {
         res.status(500).json({ err: err.message });
     }
@@ -138,7 +180,17 @@ router.post('/:id/like', verifyToken, async (req, res) => {
 
         await post.save();
         const updatedPost = await Post.findById(req.params.id).populate('author', 'username');
-        res.status(200).json(updatedPost);
+        
+        // Add savedBy information
+        const User = require('../models/user');
+        const usersWhoSavedPost = await User.find({
+            savedPosts: req.params.id
+        }).select('_id');
+
+        const postObj = updatedPost.toObject();
+        postObj.savedBy = usersWhoSavedPost.map(user => user._id);
+        
+        res.status(200).json(postObj);
     } catch (err) {
         res.status(500).json({ err: err.message });
     }
