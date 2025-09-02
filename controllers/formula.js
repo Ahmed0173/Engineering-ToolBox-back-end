@@ -97,22 +97,29 @@ const performFormulaCalculation = async (req, res) => {
       calculator_id, 
       formulaId, 
       inputs, 
-      outputKey 
+      outputKey,
+      outputVariable 
     } = req.body;
-    const user_id = req.user.id;
+    
+    // Support both outputKey and outputVariable for compatibility
+    const outputParam = outputVariable || outputKey;
+    const user_id = req.user?.id; // Optional user_id for anonymous calculations
 
-    // Verify calculator belongs to user and is QUICK type
-    const calculator = await Calculator.findOne({
-      _id: calculator_id,
-      user_id,
-      kind: 'QUICK'
-    });
-
-    if (!calculator) {
-      return res.status(404).json({
-        success: false,
-        message: 'Quick calculator not found'
+    // Skip calculator validation if calculator_id is not provided (for direct formula calculations)
+    if (calculator_id) {
+      // Verify calculator belongs to user and is QUICK type
+      const calculator = await Calculator.findOne({
+        _id: calculator_id,
+        user_id,
+        kind: 'QUICK'
       });
+
+      if (!calculator) {
+        return res.status(404).json({
+          success: false,
+          message: 'Quick calculator not found'
+        });
+      }
     }
 
     // Get the formula
@@ -126,13 +133,13 @@ const performFormulaCalculation = async (req, res) => {
 
     // Find the calculation method for the desired output
     const calculation = formula.calculations.find(
-      calc => calc.outputVariable === outputKey
+      calc => calc.outputVariable === outputParam
     );
 
     if (!calculation) {
       return res.status(400).json({
         success: false,
-        message: `Cannot calculate ${outputKey} with this formula`
+        message: `Cannot calculate ${outputParam} with this formula`
       });
     }
 
@@ -195,27 +202,30 @@ const performFormulaCalculation = async (req, res) => {
     }
 
     // Get unit for the result
-    const outputVariable = formula.variables.find(v => v.key === outputKey);
-    const unit = outputVariable ? outputVariable.unit : '';
+    const outputVariableInfo = formula.variables.find(v => v.key === outputParam);
+    const unit = outputVariableInfo ? outputVariableInfo.unit : '';
 
-    // Save calculation
-    const calculationRecord = new Calculation({
-      user_id,
-      calculator_id,
-      kind: 'QUICK',
-      formulaId,
-      inputs: new Map(Object.entries(inputs)),
-      outputKey,
-      result,
-      unit
-    });
+    // Save calculation (only if calculator_id and user_id are provided)
+    let savedCalculation = null;
+    if (calculator_id && user_id) {
+      const calculationRecord = new Calculation({
+        user_id,
+        calculator_id,
+        kind: 'QUICK',
+        formulaId,
+        inputs: new Map(Object.entries(inputs)),
+        outputKey: outputParam,
+        result,
+        unit
+      });
 
-    const savedCalculation = await calculationRecord.save();
+      savedCalculation = await calculationRecord.save();
 
-    // Update formula usage count
-    await Formula.findByIdAndUpdate(formulaId, {
-      $inc: { usageCount: 1 }
-    });
+      // Update formula usage count
+      await Formula.findByIdAndUpdate(formulaId, {
+        $inc: { usageCount: 1 }
+      });
+    }
 
     res.json({
       success: true,

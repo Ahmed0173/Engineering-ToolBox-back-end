@@ -1,4 +1,4 @@
-const Formula = require('./models/formula');
+const Formula = require('../models/formula');
 
 const seedFormulas = [
   {
