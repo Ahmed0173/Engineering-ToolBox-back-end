@@ -33,6 +33,16 @@ const userSchema = new mongoose.Schema(
       maxlength: 500,
       default: ''
     },
+    contactInfo: {
+      type: String,
+      maxlength: 200,
+      default: ''
+    },
+    title: {
+      type: String,
+      maxlength: 100,
+      default: ''
+    },
 
     // NEW: posts this user saved
     savedPosts: [{ type: Schema.Types.ObjectId, ref: 'Post', index: true }]
