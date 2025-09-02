@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
         }
         
         const posts = await Post.find(query)
-            .populate('author', 'username')
+            .populate('author', 'username avatar')
             .sort({ createdAt: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit);
@@ -81,7 +81,7 @@ router.get('/', async (req, res) => {
 // GET a specific post by ID
 router.get('/:id', async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id).populate('author', 'username');
+        const post = await Post.findById(req.params.id).populate('author', 'username avatar');
         if (!post) {
             return res.status(404).json({ err: 'Post not found' });
         }
@@ -130,7 +130,7 @@ router.put('/:id/update', verifyToken, async (req, res) => {
             req.params.id,
             req.body,
             { new: true, runValidators: true }
-        ).populate('author', 'username');
+        ).populate('author', 'username avatar');
         
         res.status(200).json(updatedPost);
     } catch (err) {
@@ -179,7 +179,7 @@ router.post('/:id/like', verifyToken, async (req, res) => {
         }
 
         await post.save();
-        const updatedPost = await Post.findById(req.params.id).populate('author', 'username');
+        const updatedPost = await Post.findById(req.params.id).populate('author', 'username avatar');
         
         // Add savedBy information
         const User = require('../models/user');
@@ -228,7 +228,7 @@ router.get('/users/liked-posts', verifyToken, async (req, res) => {
     try {
         const likedPosts = await Post.find({ 
             likes: { $in: [req.user._id] } 
-        }).populate('author', 'username').sort({ createdAt: -1 });
+        }).populate('author', 'username avatar').sort({ createdAt: -1 });
         
         res.status(200).json(likedPosts);
     } catch (err) {
