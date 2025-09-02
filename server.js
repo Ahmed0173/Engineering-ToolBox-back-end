@@ -23,9 +23,11 @@ const postRouter = require('./controllers/posts');
 const commentRouter = require('./controllers/comment');
 const privateChatRouter = require('./controllers/privateChats');
 const formulaRouter = require('./routes/formula');
+const calculatorRouter = require('./routes/calculator');
 
 // Routes
 app.use('/formulas', formulaRouter);
+app.use('/calculators', calculatorRouter);
 app.use('/auth', authRouter);
 app.use('/posts', postRouter);
 app.use('/comments', commentRouter);
@@ -39,8 +41,25 @@ const verifyToken = require('./middleware/verify-token');
 // DB Connection
 mongoose.connect(process.env.MONGODB_URI);
 
-mongoose.connection.on('connected', () => {
+mongoose.connection.on('connected', async () => {
   console.log(`Connected to MongoDB ${mongoose.connection.name}.`);
+  
+  // Seed formulas if the collection is empty
+  try {
+    const { seedFormulasDB } = require('./seeds/formulaSeeds');
+    const Formula = require('./models/formula');
+    
+    const count = await Formula.countDocuments();
+    if (count === 0) {
+      console.log('No formulas found, seeding database...');
+      await seedFormulasDB();
+      console.log('Formulas seeded successfully!');
+    } else {
+      console.log(`Found ${count} formulas in database.`);
+    }
+  } catch (error) {
+    console.error('Error seeding formulas:', error);
+  }
 });
 
 app.listen(3000, () => {

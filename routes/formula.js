@@ -8,9 +8,10 @@ router.get('/', formulaController.getFormulas);
 router.get('/category/:category', formulaController.getFormulasByCategory);
 router.get('/:id', formulaController.getFormulaById);
 router.get('/:id/calculation-options', formulaController.getFormulaCalculationOptions);
-
-// Protected routes (authentication required)
-router.use(verifyToken);
 router.post('/calculate', formulaController.performFormulaCalculation);
+
+// Protected routes (authentication required) - for future calculator-specific features
+router.use(verifyToken);
+// Add any calculator-specific formula operations here in the future
 
 module.exports = router;
