@@ -67,6 +67,8 @@ mongoose.connection.on('connected', async () => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('The express app is ready!');
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`The express app is ready on port ${PORT}!`);
 });
