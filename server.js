@@ -11,7 +11,12 @@ const logger = require('morgan');
 
 
 // MIDDLEWARE (move to top)
-app.use(cors({ origin: process.env.CORS_ORIGIN }));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(logger('dev'));
 
